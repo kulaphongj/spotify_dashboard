@@ -1,4 +1,9 @@
-# Discover Your Music Taste Dashboard
+<div align="center">
+    <a href="https://open.spotify.com/">
+        <img src="img/spotify_logo_black.png" alt="YelpViz" align="left" width="100"/>  
+    </a>
+    <h1>Discover Your Music Taste Dashboard</h1>
+</div>
 
 A music exploration tool that uses Spotify data to help users discover new music and understand their listening preferences. It includes a variety of features, such as:  
 

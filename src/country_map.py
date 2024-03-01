@@ -7,8 +7,8 @@ from dash import dash_table
 import pandas as pd
 
 # Load the data
-spotify_data_countries = pd.read_csv('./data/raw/spotify_tracks_country.csv')
-# spotify_data_genres = pd.read_csv('./data/raw/spotify_tracks_genre.csv')
+spotify_data_countries = pd.read_csv('../data/raw/spotify_tracks_country.csv')
+# spotify_data_genres = pd.read_csv('../data/raw/spotify_tracks_genre.csv')
 
 # Define a mapping of your country codes to ISO Alpha-3 codes
 country_mapping = {

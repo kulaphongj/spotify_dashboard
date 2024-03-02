@@ -19,7 +19,7 @@ import json
 import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
 import os
-import pycounty
+import pycountry
 
 # print(os.getcwd())
 # In[2]:

@@ -19,7 +19,7 @@ import json
 import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
 import os
-import pycountry
+import pycounty
 
 # print(os.getcwd())
 # In[2]:
@@ -520,8 +520,8 @@ tab3_content = html.Div([
             dbc.Card([
                 dcc.Graph(
                     id='choropleth-map',
-                    style={'height': '569px',
-                           'width': '790px'}, # '60vh'},  # Set height relative to the viewport height (60% of the viewport height)
+                    style={'height': '80vh'}
+                           #'width': '790px'}, # '60vh'}, # Set height relative to the viewport height (60% of the viewport height)
                 ),
                 dcc.Slider(
                     id='color-scale-slider',
@@ -531,32 +531,31 @@ tab3_content = html.Div([
                     value=50,
                     marks={i: str(i) for i in range(0, 101, 5)},
                 )
-                # html.Div(id='selected-country') # Include selected-country below choropleth-map and slider # MOVED 'selected-country' BELOW TO ADJUST CHARTS
+                # html.Div(id='selected-country') # Include selected-country below choropleth-map and slider
             ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '0'})
-        ], style={'width': '800px', 'float': 'left'}),
+        ], style={'width': '49%', 'float': 'left'}),
         
         html.Div([
             dbc.Card([
                 dcc.Graph(
                     id='top-songs-bar-chart',
                     config={'displayModeBar': False}, # Hide the mode bar
-                    style={'height': '300px',
-                           'width': '790px'} # '30vh'} # Set height relative to the viewport height (30% of the viewport height)
+                    style={'height': '40vh'}
+                           # 'width': '790px'} # '30vh'} # Set height relative to the viewport height (30% of the viewport height)
                 )
-            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '0', 'width': '800px', 'float': 'right'})
+            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '0', 'width': '49%', 'float': 'right'})
         ]),
         
         html.Div([
             dbc.Card([
                 dcc.Graph(id='top-artists-bar-chart',
                           config={'displayModeBar': False}, # Hide the mode bar
-                          style={'height': '300px',
-                                 'width': '790px'} # '30vh'} # Set height relative to the viewport height (30% of the viewport height)
+                          style={'height': '40vh'}
+                                 # 'width': '790px'} # '30vh'} # Set height relative to the viewport height (30% of the viewport height)
                 )
-            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '3px', 'width': '800px', 'float': 'right', 'display': 'inline-block'})
+            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '3px', 'width': '49%', 'float': 'right', 'display': 'inline-block'})
         ]),
         
-        # REPOSITIONED 'selected-country' WITH TOP10 TABLE BELOW ---------------------------------------------
         # html.Div([
         #     dbc.Card([
         #         html.Div(id='selected-country')
@@ -746,7 +745,7 @@ app.layout = dbc.Container([
         dcc.Tab([tab2_content], label='Find New One?', value='tab-2',
                 style={'fontSize': 20, 'color': 'black'},
                 selected_style={'fontSize': 20, 'fontWeight': 'bold', 'color': 'white', 'backgroundColor': 'green'}),
-        dcc.Tab([tab3_content], label='How About Globe', value='tab-3',
+        dcc.Tab([tab3_content], label='Explore Globally', value='tab-3',
                 style={'fontSize': 20, 'color': 'black'},
                 selected_style={'fontSize': 20, 'fontWeight': 'bold', 'color': 'white', 'backgroundColor': 'green'}),
     ])

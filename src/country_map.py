@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, dash_table
+from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
-from dash import dash_table
+import pycountry
 import pandas as pd
 
 # Load the data
@@ -29,6 +31,18 @@ country_mapping = {
     'VN': 'VNM', 'ZA': 'ZAF'
 }
 
+import plotly.graph_objs
+
+# Function to map country code to full country name
+def map_country_code_to_name(country_code):
+    return pycountry.countries.get(alpha_3=country_code).name
+
+# # Example usage
+# full_country_name = map_country_code_to_name('USA')
+# print(full_country_name)  # Output: United States
+
+
+
 # Make a copy to preserve the original dataframe
 spotify_data_countries_copy = spotify_data_countries.copy()
 
@@ -41,33 +55,69 @@ spotify_data_countries_copy = spotify_data_countries_copy.dropna(subset=['countr
 # Convert snapshot_date to datetime
 spotify_data_countries_copy['snapshot_date'] = pd.to_datetime(spotify_data_countries_copy['snapshot_date'])
 
+
+
 # Create Dash app
 app = dash.Dash(__name__)
+
+
 
 # Define layout of the app
 app.layout = html.Div([
     html.Div([
         html.Div([
-            dcc.Graph(id='choropleth-map'),
-            dcc.Slider(
-                id='color-scale-slider',
-                min=0,
-                max=100,
-                step=1,
-                value=50,
-                marks={i: str(i) for i in range(0, 101, 5)},
-            ),
-            html.Div(id='selected-country')
-        ], style={'width': '40%', 'float': 'left'}),
+            dbc.Card([
+                dcc.Graph(
+                    id='choropleth-map',
+                    style={'height': '569px',
+                           'width': '790px'}, # '60vh'},  # Set height relative to the viewport height (60% of the viewport height)
+                ),
+                dcc.Slider(
+                    id='color-scale-slider',
+                    min=0,
+                    max=100,
+                    step=1,
+                    value=50,
+                    marks={i: str(i) for i in range(0, 101, 5)},
+                )
+                # html.Div(id='selected-country')  # Include selected-country below choropleth-map and slider
+            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '0'})
+        ], style={'width': '800px', 'float': 'left'}),
         
         html.Div([
-            dcc.Graph(id='top-songs-bar-chart')
-        ], style={'width': '40%', 'float': 'right', 'display': 'inline-block', 'margin-top': '10px'})
+            dbc.Card([
+                dcc.Graph(
+                    id='top-songs-bar-chart',
+                    config={'displayModeBar': False},  # Hide the mode bar
+                    style={'height': '300px',
+                           'width': '790px'} # '30vh'}  # Set height relative to the viewport height (30% of the viewport height)
+                )
+            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '0', 'width': '800px', 'float': 'right'})
+        ]),
+        
+        html.Div([
+            dbc.Card([
+                dcc.Graph(id='top-artists-bar-chart',
+                          config={'displayModeBar': False},  # Hide the mode bar
+                          style={'height': '300px',
+                                 'width': '790px'} # '30vh'}  # Set height relative to the viewport height (30% of the viewport height)
+                )
+            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '3px', 'width': '800px', 'float': 'right', 'display': 'inline-block'})
+        ]),
+        
+        # html.Div([
+        #     dbc.Card([
+        #         html.Div(id='selected-country')
+        #     ], style={'backgroundColor': 'light', 'borderRadius': '5px', 'border': '1px solid lightgrey', 'padding': '5px', 'marginTop': '10px'})
+        # ], style={'width': '100%', 'float': 'left'}),
+        
+        html.Div([
+            dbc.Card([
+                html.Div(id='selected-country'),
+                html.Div(id='song-list')
+            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '3px'})
+        ], style={'width': '100%', 'float': 'left'}),
     ]),
-    
-    html.Div([
-        html.Div(id='song-list')
-    ], style={'width': '100%', 'float': 'left'})
 ])
 
 # Define callback to update choropleth map based on slider value
@@ -119,15 +169,74 @@ def update_choropleth_map(selected_value):
 
     return fig
 
-# Add callback to update selected country display
+# Add callback to update bar chart of the count of the top 10 most frequent song names globally
+@app.callback(
+    Output('top-songs-bar-chart', 'figure'),
+    [Input('color-scale-slider', 'value')]
+)
+def update_top_songs_bar_chart(selected_value):
+    # Filter DataFrame based on selected popularity value
+    filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
+
+    # Count the occurrences of each song name
+    top_song_counts = filtered_data['name'].value_counts().head(10)
+    
+    # Get the corresponding artists for the top songs
+    top_song_artists = filtered_data.groupby('name')['artists'].first()
+    
+    # Create hover text with name and artists
+    hover_text = [f"{song}<br>by {top_song_artists[song]}" for song in top_song_counts.index]
+    
+    # Create a horizontal bar chart
+    fig = go.Figure(data=[go.Bar(
+        y=top_song_counts.index + ' by ' + top_song_artists[top_song_counts.index], # Concatenate song name and artist
+        x=top_song_counts.values,
+        orientation='h', # Set orientation to horizontal
+        hovertext=hover_text,
+        hoverinfo='text',
+    )])
+    fig.update_layout(title='Top 10 Most Frequently Ranked Songs by Popularity (Globally)', 
+                      yaxis={'categoryorder': 'total ascending'},
+                      xaxis={'side': 'top'}, # Move x-axis markings to the top
+                      font=dict(size=10))
+        
+    return fig
+
+# Add callback to update top artists bar chart based on slider value
+@app.callback(
+    Output('top-artists-bar-chart', 'figure'),
+    [Input('color-scale-slider', 'value')]
+)
+def update_top_artists_bar_chart(selected_value):
+    # Filter DataFrame based on selected popularity value
+    filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
+
+    # Count the occurrences of each artist
+    top_artist_counts = filtered_data['artists'].value_counts().head(10)
+    
+    # Create a horizontal bar chart
+    fig = go.Figure(data=[go.Bar(
+        y=top_artist_counts.index,
+        x=top_artist_counts.values,
+        orientation='h', # Set orientation to horizontal
+    )])
+    fig.update_layout(title='Top 10 Most Frequently Ranked Artists by Popularity (Globally)', 
+                      yaxis={'categoryorder': 'total ascending'},
+                      xaxis={'side': 'top'}, # Move x-axis markings to the top
+                      font=dict(size=10))
+        
+    return fig
+
+# Define callback to update selected country display
 @app.callback(
     Output('selected-country', 'children'),
     [Input('choropleth-map', 'clickData')]
 )
 def update_selected_country_display(clickData):
     if clickData:
-        country_clicked = clickData['points'][0]['location']
-        return html.H3(f"Selected Country: {country_clicked}")
+        country_code = clickData['points'][0]['location']
+        country_name = map_country_code_to_name(country_code) # Map country code to full country name
+        return html.H3(f"Selected Country: {country_name}")
 
     return html.H3("Click on a country to see its top 10 songs by popularity.")
 
@@ -164,39 +273,12 @@ def update_song_list(clickData, selected_value):
             id='table',
             columns=[{'name': col.capitalize(), 'id': col} for col in ['name', 'artists'] + columns],
             data=top_songs_top10.to_dict('records'),
-            style_cell={'textAlign': 'left'} # Align cell text to the left
+            style_cell={'textAlign': 'left'}
         )
 
         return data_table
 
-# Add callback to update bar chart of the count of the top 10 most frequent song names globally
-@app.callback(
-    Output('top-songs-bar-chart', 'figure'),
-    [Input('color-scale-slider', 'value')]
-)
-def update_top_songs_bar_chart(selected_value):
-    # Filter DataFrame based on selected popularity value
-    filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
 
-    # Count the occurrences of each song name
-    top_song_counts = filtered_data['name'].value_counts().head(10)
-    
-    # Get the corresponding artists for the top songs
-    top_song_artists = filtered_data.groupby('name')['artists'].first()
-    
-    # Create hover text with name and artists
-    hover_text = [f"{song}<br>by {top_song_artists[song]}" for song in top_song_counts.index]
-    
-    # Create a bar chart
-    fig = go.Figure(data=[go.Bar(
-        x=top_song_counts.index + ' by ' + top_song_artists[top_song_counts.index], # Concatenate song name and artist
-        y=top_song_counts.values,
-        hovertext=hover_text,
-        hoverinfo='text',
-    )])
-    fig.update_layout(title='Top 10 Most Frequently Ranked Songs by Popularity (Globally)')
-        
-    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)

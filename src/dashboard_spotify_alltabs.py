@@ -28,7 +28,6 @@ import pycountry
 # Create Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-
 # # Tabs
 
 # ## Tab 1

@@ -60,8 +60,8 @@
 
 ## Additional Resources
 
-- [Description of the App & Sketch](README.md)
+- [Description of the App & Sketch](../README.md)
 - [Team Contract](team-contract.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [License](LICENSE)
+- [Code of Conduct](../CODE_OF_CONDUCT.md)
+- [Contributing Guidelines](../CONTRIBUTING.md)
+- [License](../LICENSE)

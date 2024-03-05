@@ -50,10 +50,10 @@ Example sketch:
 
 Release 1.0.0:
 Tab1: Discovery Music Taste Sketch    
-![Discovery Music Taste Sketch](img/tab1.png)  
+![Discovery Music Taste Sketch](img/re1_tab1.png)  
 
 Tab1: Find New Music  
-![Find New Music](img/tab2.png)  
+![Find New Music](img/re1_tab2.png)  
 
 Tab3: Explore Globally  
-![Explore Globally](img/tab3.png)  
+![Explore Globally](img/re1_tab3.png)  

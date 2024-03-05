@@ -7,20 +7,18 @@
 
 ## Overview
 
-Discover Your Music Taste Dashboard leverages Spotify data to provide an interactive and insightful exploration of your music preferences. Designed to help users uncover new tracks and understand their listening habits, the dashboard features advanced data visualizations and customizable filters.
+Discover Your Music Taste Dashboard uses Spotify data to provide an interactive and insightful exploration of your music preferences. Designed to help users uncover new tracks and understand their listening habits, the dashboard features advanced data visualizations and customizable filters.
 
 ## Getting Started
 
 - **Installation**: Clone the repository and install dependencies using `pip install -r requirements.txt`.
-- **Launching**: Run the dashboard by executing `python app.py` and navigate to `http://127.0.0.1:8050/` in your web browser.
+- **Launching**: Run the dashboard by executing `python dashboard_spotify_alltabs.py` and navigate to `http://127.0.0.1:8050/` in your web browser.
 
 ## Dashboard Features
 
 ### Tab 1: Discover Music Taste
 
-#### Slicers
-Understand your music taste with filters for attributes like popularity, danceability, and tempo.
-
+- **Slicers**: Understand your music taste with filters for attributes like popularity, danceability, and tempo.
 - **Dropdown Filters**: Quickly search for artists and songs with a text input field, enhancing your discovery process.
 - **Radar Chart**: Visualize your music taste across different audio features, helping to identify your preferred genres and styles.
 - **Genre Pie Charts**: See the distribution of genres within your listening history and explore unfamiliar musical territories.

@@ -46,14 +46,14 @@ We welcome contributions! If you have ideas for new features or improvements, pl
 
 Example sketch:  
 
-![Dashboard Sketch](img/sketch_1.png)  
+![Dashboard Sketch](img/sketch_1.png)   
 
-Release 1.0.0:
-Tab1: Discovery Music Taste Sketch    
+Release 1.0.0:  
+Tab 1: Discovery Music Taste Sketch    
 ![Discovery Music Taste Sketch](img/re1_tab1.png)  
 
-Tab1: Find New Music  
+Tab 2: Find New Music  
 ![Find New Music](img/re1_tab2.png)  
 
-Tab3: Explore Globally  
+Tab 3: Explore Globally  
 ![Explore Globally](img/re1_tab3.png)  

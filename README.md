@@ -22,7 +22,7 @@ Discover Your Music Taste Dashboard uses Spotify data to provide an interactive 
 - **Dropdown Filters**: Quickly search for artists and songs with a text input field, enhancing your discovery process.
 - **Radar Chart**: Visualize your music taste across different audio features, helping to identify your preferred genres and styles.
 - **Genre Pie Charts**: See the distribution of genres within your listening history and explore unfamiliar musical territories.
-- **Tempo Histogram Chart**: Examine the distribution of song tempos in your library to match songs with your preferred energy level.
+
 
 ### Tab 2: Find New Music
 
@@ -47,3 +47,13 @@ We welcome contributions! If you have ideas for new features or improvements, pl
 Example sketch:  
 
 ![Dashboard Sketch](img/sketch_1.png)  
+
+Release 1.0.0:
+Tab1: Discovery Music Taste Sketch    
+![Discovery Music Taste Sketch](img/tab1.png)  
+
+Tab1: Find New Music  
+![Find New Music](img/tab2.png)  
+
+Tab3: Explore Globally  
+![Explore Globally](img/tab3.png)  

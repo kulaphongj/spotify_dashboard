@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import dash
 from dash import dcc, html, Input, Output, dash_table
 from dash.dependencies import Input, Output
@@ -21,9 +18,6 @@ from sklearn.preprocessing import MinMaxScaler
 import os
 import pycountry
 
-# print(os.getcwd())
-# In[2]:
-
 
 # Create Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -31,9 +25,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # # Tabs
 
 # ## Tab 1
-
-# In[3]:
-
 
 # Data Preprocessing Tab1
 # load data
@@ -64,6 +55,42 @@ f.close()
 # list_artists = list_artists[:20]
 # list_track_name = list_track_name[:5]
 
+def filter_taste(slct_genre, slct_track, slct_artist):
+    df_filt = df_tracks.copy()
+    # filter data
+    ## filter all
+    if (len(slct_genre)>0)&(len(slct_track)>0)&(len(slct_artist)>0):
+        cond_genre = df_tracks['track_genre'].isin(slct_genre)
+        cond_track = df_tracks['track_name'].isin(slct_track)
+        cond_artist = df_tracks['artists'].isin(slct_artist)
+        df_filt = df_tracks[cond_genre|cond_track|cond_artist]
+    ## filter only genre
+    elif (len(slct_genre)>0)&(len(slct_track)==0)&(len(slct_artist)==0):
+        df_filt = df_tracks[df_tracks['track_genre'].isin(slct_genre)]
+    ## filter genre and trackname
+    elif (len(slct_genre)>0)&(len(slct_track)>0)&(len(slct_artist)==0):
+        cond_genre = df_tracks['track_genre'].isin(slct_genre)
+        cond_track = df_tracks['track_name'].isin(slct_track)
+        df_filt = df_tracks[cond_genre|cond_track]
+    ## filter only trackname
+    elif (len(slct_genre)==0)&(len(slct_track)>0)&(len(slct_artist)==0):
+        df_filt = df_tracks[df_tracks['track_name'].isin(slct_track)]
+    ## filter trackname and artist
+    elif (len(slct_genre)==0)&(len(slct_track)>0)&(len(slct_artist)>0):
+        cond_track = df_tracks['track_name'].isin(slct_track)
+        cond_artist = df_tracks['artists'].isin(slct_artist)
+        df_filt = df_tracks[cond_track|cond_artist] 
+    ## filter only artist
+    elif (len(slct_genre)==0)&(len(slct_genre)==0)&(len(slct_artist)>0):
+        df_filt = df_tracks[df_tracks['artists'].isin(slct_artist)]
+    ## filter genre and artist
+    elif (len(slct_genre)>0)&(len(slct_track)==0)&(len(slct_artist)>0):
+        cond_genre = df_tracks['track_genre'].isin(slct_genre)
+        cond_artist = df_tracks['artists'].isin(slct_artist)
+        df_filt = df_tracks[cond_genre|cond_artist]
+    
+    return df_filt
+
 # Specify the columns for the radar chart
 list_cols_radar = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 
            'instrumentalness', 'liveness', 'valence', 'tempo']
@@ -82,70 +109,83 @@ df_table = df_table.sort_values('Statistics')
 df_table = df_table.round(2)
 
 
-# In[4]:
-
-
-# app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
 # app.layout = dbc.Container([
 tab1_content = html.Div([
     html.Br(),
     dbc.Row([
         # Col1 : filter and Logo
             dbc.Col([
-                dbc.Card([
-                    # Row 1: Filter
-                    dbc.Row([
-                        # Col1: filter genre
-                        dbc.Col([
-                                html.P("Genre", style={'margin-left': '5px', 'margin-top': '10px'}),
-                                dcc.Dropdown(
-                                            id="genre-filter",
-                                            options=[{'label': genre, 'value': genre} for genre in list_track_genre],
-                                            value=[],
-                                            multi=True,
-                                            placeholder="Select an Genre",
-                                            style={'width': '3',  
-                                                   'min-height': '67vh',
-                                                   'margin-left': '3px',
-                                                   'margin-bottom': '3px'} 
-                                ) 
-                        ], width=6),
+                # Row 1: Filter
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardHeader("Filter", 
+                                           style={'backgroundColor': '#68A58C',
+                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'font-size': '18px'}),
+                            dbc.CardBody([
+                                # Row 1: Filter
+                                dbc.Row([
+                                    dbc.Col([
+                                        # filter track name and artist
+                                        dbc.Row([
+                                            # Col1: filter trackname
+                                            dbc.Col([
+                                                html.P("Track name", style={'margin-left': '5px', 'margin-top': '10px'}),
+                                                dcc.Dropdown(
+                                                            id="trackname-filter",
+                                                            options=[{'label': song, 'value': song} for song in list_track_name],
+                                                            value=[],
+                                                            multi=True,
+                                                            placeholder="Select an Track Name",
+                                                            style={'width': '6',  
+                                                                   'min-height': '28vh'}   
+                                                )
+                                            ], width=6),
 
-                        # Col2: filter artist and track name
-                        dbc.Col([
-                            # Row1: filter artist
-                            dbc.Row([
-                                    html.P("Artist", style={'margin-left': '5px', 'margin-top': '10px'}),
-                                    dcc.Dropdown(
-                                                id="artist-filter",
-                                                options=[{'label': artist, 'value': artist} for artist in list_artists],
-                                                value=[],
-                                                multi=True,
-                                                placeholder="Select an artist",
-                                                style={'width': '3',  
-                                                       'min-height': '30vh'} 
-                                    ) 
-                            ]),            
-                            # Row2: filter track name
-                            dbc.Row([
-                                    html.P(),
-                                    html.P("Track name", style={'margin-left': '5px', 'margin-top': '10px'}),
-                                    dcc.Dropdown(
-                                                id="trackname-filter",
-                                                options=[{'label': song, 'value': song} for song in list_track_name],
-                                                value=[],
-                                                multi=True,
-                                                placeholder="Select an Track Name",
-                                                style={'width': '3',  
-                                                       'min-height': '30vh',
-                                                       'margin-bottom': '3px'
-                                                      }   
-                                    )
+                                            # Col2: filter artist
+                                            dbc.Col([
+                                                html.P("Artist", style={'margin-left': '5px', 'margin-top': '10px'}),
+                                                dcc.Dropdown(
+                                                            id="artist-filter",
+                                                            options=[{'label': artist, 'value': artist} for artist in list_artists],
+                                                            value=[],
+                                                            multi=True,
+                                                            placeholder="Select an Artist",
+                                                            style={'width': '6',  
+                                                                   'min-height': '28vh'} 
+                                                ) 
+                                            ], width=6),
+
+
+                                        ]),
+
+                                        # filter genre
+                                        dbc.Row([
+                                            # Col1: filter genre
+                                            dbc.Col([
+                                                    html.P("Genre", style={'margin-left': '5px', 'margin-top': '10px'}),
+                                                    dcc.Dropdown(
+                                                                id="genre-filter",
+                                                                options=[{'label': genre, 'value': genre} for genre in list_track_genre],
+                                                                value=[],
+                                                                multi=True,
+                                                                placeholder="Select an Genre",
+                                                                style={'width': '12',  
+                                                                       'min-height': '20vh',
+                                                                       'margin-left': '3px',
+                                                                       'margin-bottom': '3px'} 
+                                                    ),
+                                                html.Div(id='hidden-data', style={'display': 'none'})
+                                            ], width=12)      
+
+                                        ]),
+                                    ], width=12)
+                                ]),
                             ])
-                        ], width=6, style={'margin-left': '-7px'})
-                    ]),
-                ], color='light'),
+                        ], color='light'),
+                    ], width=12)
+                ]),
                     
                 # Row 2 : Logo
                 dbc.Row([
@@ -165,72 +205,82 @@ tab1_content = html.Div([
             dbc.Row([
                 # Col1: Table of song
                 dbc.Col([
-                    html.P("Your Music Taste", style={'margin-left': '5px', 'margin-top': '10px'}),
                     dbc.Card([
-                        dash_table.DataTable(
-                                         id='stats-table',
-                                         columns=[{'name': col, 'id': col} for col in df_table.columns],
-                                         data=df_table.to_dict('records'),
-                                         style_table={'width': '4', 'height': '320px', 'marginTop': '15px'},
-                                         style_cell={'font_size': '14px', 'whiteSpace': 'normal','word-wrap': 'break-word',
-                                                    'textAlign': 'center', 'minWidth': '60px', 'maxWidth': '60px', 
-                                                    'backgroundColor': 'transparent'}  ,
-                                         style_data={'border': '0px'},
-                                         style_header={'border': '0px', 'fontWeight': 'bold', 'font-size': '18px'},
-                                         style_data_conditional=[
-                                                    {'if': {'column_id': 'Statistics'}, 
-                                                     'textAlign': 'center', 'minWidth': '140px', 'maxWidth': '140px' }]                  
-                        )
+                        dbc.CardHeader("Your Music Taste", 
+                                           style={'backgroundColor': '#68A58C',
+                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'font-size': '18px'}),          
+                        dbc.CardBody([
+                            dash_table.DataTable(
+                                             id='stats-table',
+                                             columns=[{'name': col, 'id': col} for col in df_table.columns],
+                                             data=df_table.to_dict('records'),
+                                             style_table={'width': '6', 'height': '330px', 
+#                                                           'marginTop': '15px',
+                                                          'overflowX': 'auto'},
+                                             style_cell={'font_size': '14px', 'whiteSpace': 'normal',
+                                                         'word-wrap': 'break-word',
+                                                        'textAlign': 'center', 'minWidth': '60px', 
+                                                         'maxWidth': '60px', 
+                                                        'backgroundColor': 'transparent'}  ,
+                                             style_data={'border': '0px'},
+                                             style_header={'border': '0px', 'fontWeight': 'bold', 
+                                                           'font-size': '18px'},
+                                             style_data_conditional=[
+                                                        {'if': {'column_id': 'Statistics'}, 
+                                                         'textAlign': 'center', 'minWidth': '140px', 
+                                                         'maxWidth': '140px' }]                  
+                            )
+                        ], style={'height': '330px'})
                     ], color='light')
                 ], width=6),
                 
                 # Col2: Pie Chart
                 dbc.Col([
-                    html.P("Genre Proportion", style={'margin-left': '5px', 'margin-top': '10px'}),
                     dbc.Card([
-                        html.Iframe(
-                                    id='pie-chart',
-                                    style={'border-width': '0', 'width': '100%', 'height': '335px'}
-                        )
+                        dbc.CardHeader("Genre Proportion", 
+                                           style={'backgroundColor': '#68A58C',
+                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'font-size': '18px'}),
+                        dbc.CardBody([
+                            html.Iframe(
+                                        id='pie-chart',
+                                        style={'border-width': '0', 'width': '100%', 'height': '330px'}
+                            )
+                        ], style={'height': '330px'})
                     ], color="light")
                 ], width=6)
-            ]),
+            ], className="gx-3"),
             
             # Row2: Radar Charts
             dbc.Row([
                #Col1: Radar Chart
                 dbc.Col([
-                    html.P("Music Taste Status", style={'margin-left': '5px', 'margin-top': '10px'}),
                     dbc.Card([
-                        dcc.Graph(id='radar-chart')       
-                    ], color="light")
+                        dbc.CardHeader("Music Taste Status", 
+                                           style={'backgroundColor': '#68A58C',
+                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'font-size': '18px'}),
+                        dbc.CardBody([
+                            dcc.Graph(id='radar-chart')
+                        ])
+                    ], color="light", style={'margin-top': '16px'})
                 ], width=12)
             ]),        
         ], width=8)
-        
-    ])   
+    ], className="gx-3")   
 ])
-
-
 
 @app.callback(
     Output('stats-table', 'data'),  # Statistics table
     Output('pie-chart', 'srcDoc'),  # Genre Pie Chart
-#     Output('bar-chart', 'srcDoc'),  # Tempo Bar Chart
     Input('genre-filter', 'value'),
     Input('trackname-filter', 'value'),
     Input('artist-filter', 'value'))
 def filter_genre(slct_genre, slct_track, slct_artist):
-    # filter data
-    df_filt = df_tracks.copy()
-    if len(slct_genre)>0:
-        df_filt = df_tracks[df_tracks['track_genre'].isin(slct_genre)]
-    if len(slct_track)>0:
-        df_filt = df_tracks[df_tracks['track_name'].isin(slct_track)]
-    if len(slct_artist)>0:
-        df_filt = df_tracks[df_tracks['artists'].isin(slct_artist)]
     
-
+    df_filt = filter_taste(slct_genre, slct_track, slct_artist)
+    
     # stats table
     df_table = df_filt[list_stats_dsp].describe().T[['min', 'mean', 'max']].reset_index()
     df_table.columns = ['Statistics', 'Min', 'Mean', 'Max']
@@ -262,8 +312,10 @@ def filter_genre(slct_genre, slct_track, slct_artist):
             )
     
     
-    chart_pie_t = (chart_pie + text).properties(width=250, height=300, background='transparent').configure_view(strokeWidth=0)
-    return df_table.to_dict('records'), chart_pie_t.to_html()#, chart_bar.to_html()
+    chart_pie_t = (chart_pie + text).properties(width=230, height=270, 
+                                                background='transparent').configure_view(strokeWidth=0)
+    
+    return df_table.to_dict('records'), chart_pie_t.to_html()
 
 
 # Radar chart with plotly
@@ -274,14 +326,8 @@ def filter_genre(slct_genre, slct_track, slct_artist):
      dash.dependencies.Input('artist-filter', 'value')
 )
 def update_radar_chart(slct_genre, slct_track, slct_artist):
-    # filter data
-    df_filt = df_tracks.copy()
-    if len(slct_genre)>0:
-        df_filt = df_tracks[df_tracks['track_genre'].isin(slct_genre)]
-    if len(slct_track)>0:
-        df_filt = df_tracks[df_tracks['track_name'].isin(slct_track)]
-    if len(slct_artist)>0:
-        df_filt = df_tracks[df_tracks['artists'].isin(slct_artist)]
+    
+    df_filt = filter_taste(slct_genre, slct_track, slct_artist)
         
     # Group by genre and calculate the mean of each metric
     mean_metrics_by_genre = df_filt.groupby('track_genre')[list_cols_radar].mean()
@@ -310,11 +356,8 @@ def update_radar_chart(slct_genre, slct_track, slct_artist):
 
     # Create the layout
     layout = go.Layout(
-#         title="Average Music Metrics by Genre (Radar Chart)",
         polar=dict(
             radialaxis=dict(visible=True),
-            
-            
         ),
         showlegend=True,
         paper_bgcolor='rgba(0,0,0,0)',
@@ -329,9 +372,6 @@ def update_radar_chart(slct_genre, slct_track, slct_artist):
 
 
 # ## Tab 2
-
-# In[5]:
-
 
 # Data Preprocessing Tab2
 df = df_tracks.copy()
@@ -456,9 +496,6 @@ def update_content(*args):
 
 # ## Tab 3
 
-# In[6]:
-
-
 # Data Preprocessing Tab3
 # Load the data
 spotify_data_countries = pd.read_csv('./data/raw/spotify_tracks_country.csv')
@@ -506,10 +543,6 @@ spotify_data_countries_copy = spotify_data_countries_copy.dropna(subset=['countr
 
 # Convert snapshot_date to datetime
 spotify_data_countries_copy['snapshot_date'] = pd.to_datetime(spotify_data_countries_copy['snapshot_date'])
-
-
-
-# In[7]:
 
 
 # Define layout of tab 3 (COUNTRIES, GLOBAL)
@@ -731,10 +764,6 @@ def update_song_list(clickData, selected_value):
 
 
 # ## Merge Tab
-
-# In[8]:
-
-
 # Define the app layout
 app.layout = dbc.Container([
     dcc.Tabs(id='tabs', value='tab-1', children=[
@@ -751,27 +780,8 @@ app.layout = dbc.Container([
 ])
 
 
-# In[9]:
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
 
 

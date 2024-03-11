@@ -284,6 +284,7 @@ def filter_genre(slct_genre, slct_track, slct_artist):
     # stats table
     df_table = df_filt[list_stats_dsp].describe().T[['min', 'mean', 'max']].reset_index()
     df_table.columns = ['Statistics', 'Min', 'Mean', 'Max']
+    df_table['Statistics'] = df_table['Statistics'].str.capitalize()
     df_table = df_table.sort_values('Statistics')
     df_table = df_table.round(2)
     

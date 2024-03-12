@@ -137,6 +137,7 @@ tab1_content = html.Div([
                                                             options=[{'label': song, 'value': song} for song in list_track_name],
                                                             value=[],
                                                             multi=True,
+                                                            optionHeight=110,
                                                             placeholder="Select an Track Name",
                                                             style={'width': '6',  
                                                                    'min-height': '28vh'}   
@@ -151,6 +152,7 @@ tab1_content = html.Div([
                                                             options=[{'label': artist, 'value': artist} for artist in list_artists],
                                                             value=[],
                                                             multi=True,
+                                                            optionHeight=110,
                                                             placeholder="Select an Artist",
                                                             style={'width': '6',  
                                                                    'min-height': '28vh'} 

@@ -493,7 +493,7 @@ def update_content(*args):
 
 # Data Preprocessing Tab3
 # Load the data
-spotify_data_countries = pd.read_csv('./data/preprocessed/dashboard_finding_your_music_taste.csv')
+spotify_data_countries = pd.read_csv('./data/preprocessed/spotify_tracks_country_rencently.csv')
 # spotify_data_genres = pd.read_csv('./data/raw/spotify_tracks_genre.csv')
 
 # Define a mapping of your country codes to ISO Alpha-3 codes

@@ -97,8 +97,10 @@ def filter_taste(slct_genre, slct_track, slct_artist):
 list_cols_radar = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 
            'instrumentalness', 'liveness', 'valence', 'tempo']
 # default genre for showing radar chart
-selected_genres_default = ['tango', 'acoustic', 'black-metal', 'j-idol', 'anime', 
-                     'idm', 'comedy', 'pop', 'blues', 'disco', 'k-pop', 'romance', 'death-metal']
+selected_genres_default = ['pop', 'hip-hop', 'rock-n-roll',  
+                             'rock', 'edm', 'r-n-b', 'country',
+                             'latin', 'indie', 'k-pop', 'metal',
+                             'classical', 'jazz', 'blues', 'folk', 'reggae', 'soul']
 
 
 # list for stats table
@@ -380,10 +382,9 @@ def update_radar_chart(slct_genre, slct_track, slct_artist):
 
 df = df_tracks.copy()
 df['artists'] = df['artists'].str.split(';').str[0]
-
-# Helper functions for generating slider marks and normalizing data
+# Helper functions
 def generate_marks(feature_min, feature_max):
-    step = max((feature_max - feature_min) / 5, 1)  # Ensure step is at least 1
+    step = max((feature_max - feature_min) / 5, 1) 
     return {i: f"{i:.2f}" for i in range(int(feature_min), int(feature_max) + 1, int(step))}
 
 def normalize(df, features):
@@ -394,19 +395,49 @@ def normalize(df, features):
         result[feature_name] = (df[feature_name] - min_value) / (max_value - min_value)
     return result
 
+# Tooltips for each slider
+feature_tooltips = {
+    'danceability': 'How suitable a track is for dancing based on a combination of musical elements.',
+    'energy': 'A measure of intensity and activity.',
+    'speechiness': 'The presence of spoken words in a track.',
+    'acousticness': 'A measure of how acoustic a track is.',
+    'instrumentalness': 'The likelihood that a track contains no vocal content.',
+    'liveness': 'The presence of an audience in the recording.',
+    'valence': 'The musical positiveness conveyed by a track.',
+    'tempo': 'The overall estimated tempo of a track in beats per minute (BPM).'
+}
 
+# Layout adjustments
 tab2_content = dbc.Container([
     dbc.Row([
         dbc.Col(html.H1("Discover New Music", className="text-center mb-4"), width=12),
     ]),
     dbc.Row([
+        # Left column
         dbc.Col([
+            # Genre Selection Card
             dbc.Card([
-                dbc.CardHeader("Music Features", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dbc.CardHeader("Step1: Select Genre", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
+                dbc.CardBody([
+                    dcc.Dropdown(
+                        id='genre-dropdown',
+                        options=[{'label': genre, 'value': genre} for genre in df['track_genre'].unique()],
+                        #value=[df['track_genre'].unique()[1]],
+                        value=['pop','k-pop'],
+                        multi=True
+                    ),
+                ])
+            ], style={'marginBottom': '20px'}),
+
+            # Music Features Card
+            dbc.Card([
+                dbc.CardHeader("Step2: Change Music Feature Ranges", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
                 dbc.CardBody([
                     html.Div([
                         html.Div([
-                            html.Label(f"{feature.capitalize()}"),
+                            html.Div([
+                                html.Label(f"{feature.capitalize()}:", id=f"label-{feature}"),
+                            ]),
                             dcc.RangeSlider(
                                 id=f'{feature}-slider',
                                 min=df[feature].min(),
@@ -416,29 +447,36 @@ tab2_content = dbc.Container([
                                 value=[df[feature].min(), df[feature].max()],
                                 tooltip={"placement": "bottom", "always_visible": True}
                             ),
-                        ], style={'padding': '10px', 'margin': '10px 0'}) for feature in ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']
-                    ]),
-                    dcc.Dropdown(
-                        id='genre-dropdown',
-                        options=[{'label': genre, 'value': genre} for genre in df['track_genre'].unique()],
-                        value=[df['track_genre'].unique()[0]],
-                        multi=True
-                    ),
+                            dbc.Tooltip(
+                                feature_tooltips[feature],
+                                target=f"label-{feature}",
+                            ),
+                        ], style={'padding': '10px', 'margin': '10px 0'})
+                        for feature in [
+                            'danceability', 'energy', 'speechiness',
+                            'acousticness', 'instrumentalness',
+                            'liveness', 'valence', 'tempo'
+                        ]
+                    ])
                 ]),
             ], style={'marginBottom': '20px'}),
         ], md=4),
+
+        # Right column for Graphs and Tables
         dbc.Col([
+            # Selected Features and Trends Card
             dbc.Card([
-                dbc.CardHeader("Selected Features and Trends", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dbc.CardHeader("Step3: Observe Selected Music Feature Distribution", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
                 dbc.CardBody([
                     dcc.Graph(id='parallel-coordinates-plot'),
                 ])
             ], style={'marginBottom': '20px'}),
+            #Songs tables
             dbc.Card([
-                dbc.CardHeader("Top 10 Songs", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dbc.CardHeader("Step4: Popular Songs Based On Your Selections", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
                 dbc.CardBody([
                     dash_table.DataTable(
-                        id='songs-table', 
+                        id='songs-table',
                         columns=[
                             {"name": "Track Name", "id": "track_name"},
                             {"name": "Popularity", "id": "popularity"},
@@ -454,37 +492,54 @@ tab2_content = dbc.Container([
                         },
                     )
                 ])
-            ])
+            ], style={'marginBottom': '20px'}),
         ], md=8),
     ]),
 ])
 
-# Callback for updating the Parallel Coordinates Plot and Songs Table based on user input
+
 @app.callback(
     [Output('parallel-coordinates-plot', 'figure'),
      Output('songs-table', 'data')],
-    [Input(f'{feature}-slider', 'value') for feature in ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']] +
-    [Input('genre-dropdown', 'value')]
+    [Input(f'{feature}-slider', 'value') for feature in [
+        'danceability', 'energy', 'speechiness', 'acousticness',
+        'instrumentalness', 'liveness', 'valence', 'tempo'
+    ]] + [Input('genre-dropdown', 'value')]
 )
 def update_content(*args):
-    slider_values = args[:-1]  # Extract slider values
-    selected_genres = args[-1]  # Extract genre dropdown value
-    filtered_df = df[df['track_genre'].isin(selected_genres)]
-    for i, feature in enumerate(['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']):
-        filtered_df = filtered_df[(filtered_df[feature] >= slider_values[i][0]) & (filtered_df[feature] <= slider_values[i][1])]
-    
-    # Normalize the filtered data for better visual comparison
-    normalized_df = normalize(filtered_df, ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'])
+    # Split inputs into slider values and selected genres
+    slider_values = args[:-1]  # Extract slider values for features
+    selected_genres = args[-1]  # Extract selected genre(s) from dropdown
 
-    # Parallel Coordinates Plot for visualizing the songs
+    # Filter the DataFrame based on selected genres
+    filtered_df = df[df['track_genre'].isin(selected_genres)]
+
+    # Further filter the DataFrame based on slider values for each feature
+    features = [
+        'danceability', 'energy', 'speechiness', 'acousticness',
+        'instrumentalness', 'liveness', 'valence', 'tempo'
+    ]
+    for i, feature in enumerate(features):
+        min_val, max_val = slider_values[i]
+        filtered_df = filtered_df[(filtered_df[feature] >= min_val) & (filtered_df[feature] <= max_val)]
+
+    # Normalize the filtered data for visual comparison
+    normalized_df = normalize(filtered_df, features)
+
+    # Create a Parallel Coordinates Plot for visualizing the songs
     parallel_coordinates_figure = go.Figure(data=go.Parcoords(
-        line=dict(color=normalized_df['popularity'], colorscale=[[0, 'purple'], [0.5, 'lightseagreen'], [1, 'gold']], showscale=True),
-        dimensions=[{'label': col, 'values': normalized_df[col]} for col in ['danceability', 'energy', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']]
+        line=dict(color=normalized_df['popularity'],
+                  colorscale=[[0, 'purple'], [0.5, 'lightseagreen'], [1, 'gold']],
+                  showscale=True),
+        dimensions=[{'label': col, 'values': normalized_df[col]} for col in features]
     ))
     parallel_coordinates_figure.update_layout(title_text='Parallel Coordinates Plot for Selected Features')
 
-    songs_table_data = filtered_df[['artists', 'track_id', 'track_name', 'popularity']].sort_values(by='popularity', ascending=False)
-    songs_table_data['track_id'] = songs_table_data['track_id'].apply(lambda x: f"[Listen on Spotify](https://open.spotify.com/track/{x})")
+    # Prepare data for the songs table
+    songs_table_data = filtered_df[['track_name', 'popularity', 'artists', 'track_id']]\
+        .sort_values(by='popularity', ascending=False)
+    songs_table_data['track_id'] = songs_table_data['track_id']\
+        .apply(lambda x: f"[Listen on Spotify](https://open.spotify.com/track/{x})")
     songs_table_data = songs_table_data.to_dict('records')
 
     return parallel_coordinates_figure, songs_table_data

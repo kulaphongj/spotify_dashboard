@@ -214,7 +214,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Your Music Taste", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', 
                                                   'font-size': '18px'}),          
                         dbc.CardBody([
                             dash_table.DataTable(
@@ -246,7 +246,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Genre Proportion", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', #'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
                             html.Iframe(
@@ -265,7 +265,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Music Taste Status", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', #'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
                             dcc.Graph(id='radar-chart')
@@ -383,9 +383,14 @@ def update_radar_chart(slct_genre, slct_track, slct_artist):
 df = df_tracks.copy()
 df['artists'] = df['artists'].str.split(';').str[0]
 # Helper functions
+# Helper functions
 def generate_marks(feature_min, feature_max):
     step = max((feature_max - feature_min) / 5, 1) 
-    return {i: f"{i:.2f}" for i in range(int(feature_min), int(feature_max) + 1, int(step))}
+    if feature_max<=1:
+        return {feature_min: f"{feature_min:.2f}", feature_max: f"{feature_max:.2f}"}
+    else:
+        return {i: f"{i:.2f}" for i in range(int(feature_min), int(feature_max) + 1, int(step))}
+
 
 def normalize(df, features):
     result = df.copy()
@@ -409,6 +414,7 @@ feature_tooltips = {
 
 # Layout adjustments
 tab2_content = dbc.Container([
+    html.Br(),
     dbc.Row([
         dbc.Col(html.H1("Discover New Music", className="text-center mb-4"), width=12),
     ]),
@@ -630,19 +636,16 @@ tab3_content = html.Div([
         
         html.Div([
             dbc.Card([
-                dcc.Graph(id='top-artists-bar-chart',
-                          config={'displayModeBar': False}, # Hide the mode bar
-                          style={'height': '40vh'}
-                                 # 'width': '790px'} # '30vh'} # Set height relative to the viewport height (30% of the viewport height)
-                )
-            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '3px', 'width': '49%', 'float': 'right', 'display': 'inline-block'})
+                dbc.CardHeader("Most Popular Artists", style={'backgroundColor': '#68A58C',
+                                              'fontWeight': 'bold', 'color': 'white',
+                                              'font-size': '18px'}
+                ),
+                dbc.CardBody([
+                    html.Div(id='image-container')
+                ])
+            ], color='light')
         ]),
         
-        # html.Div([
-        #     dbc.Card([
-        #         html.Div(id='selected-country')
-        #     ], style={'backgroundColor': 'light', 'borderRadius': '5px', 'border': '1px solid lightgrey', 'padding': '5px', 'marginTop': '10px'})
-        # ], style={'width': '100%', 'float': 'left'}),
         
         html.Div([
             dbc.Card([
@@ -737,7 +740,7 @@ def update_top_songs_bar_chart(selected_value):
 
 # Add callback to update top artists bar chart based on slider value
 @app.callback(
-    Output('top-artists-bar-chart', 'figure'),
+    Output('image-container', 'children'),
     [Input('color-scale-slider', 'value')]
 )
 def update_top_artists_bar_chart(selected_value):
@@ -745,20 +748,41 @@ def update_top_artists_bar_chart(selected_value):
     filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
 
     # Count the occurrences of each artist
-    top_artist_counts = filtered_data['artists'].value_counts().head(10)
+    list_top_artists = filtered_data['artists'].value_counts().head(3).index.tolist()
     
-    # Create a horizontal bar chart
-    fig = go.Figure(data=[go.Bar(
-        y=top_artist_counts.index,
-        x=top_artist_counts.values,
-        orientation='h', # Set orientation to horizontal
-    )])
-    fig.update_layout(title='Top 10 Most Frequently Ranked Artists by Popularity (Globally)', 
-                      yaxis={'categoryorder': 'total ascending'},
-                      xaxis={'side': 'top'}, # Move x-axis markings to the top
-                      font=dict(size=10))
-        
-    return fig
+#     list_top_artists = ['Taylor Swift',  'Justin Bieber', 'Ed Sheeran']  # top 3
+
+    list_links_picts = []
+    image_components = []
+    for i, search_artist in enumerate(list_top_artists):
+        # define website (Bing is easy for scraping)
+        # url_search = f'https://www.bing.com/images/search?q={search_query}'
+        url_search = f'https://www.bing.com/images/search?cw=1853&ch=933&q={search_artist}&qft=%2bfilterui%3aface-portrait&first=1'
+        url_search
+
+        # call html
+        headers = {
+                'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+            }
+
+        response = requests.get(url_search, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        time.sleep(1)  # wait 1 second for data showing up; I have tried 0.75. It cannot load the image.
+
+        # get image link
+        link_image = soup.find_all('img', {"class":"mimg"})[0].get('src')
+
+        image_components.append(
+            html.Div([  # Create a container div for image and name
+                html.Img(src=link_image, style={'height': '200px', 'width': '180px', 'margin': '5px'}),
+                html.P(search_artist)  # Add a paragraph for the artist's name
+            ], style={'display': 'inline-block', 'margin': '5px', 'text-align': 'center'})  # Style for spacing
+        )
+    
+    
+    return image_components
+
 
 # Define callback to update selected country display
 @app.callback(

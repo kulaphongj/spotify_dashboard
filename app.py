@@ -25,7 +25,7 @@ import time
 
 
 # Create Dash app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title="Music Explorer with Spotify")
 server = app.server
 
 
@@ -788,7 +788,7 @@ def update_top_artists_img(selected_range):
 
         image_components.append(
             html.Div([  # Create a container div for image and name
-                html.Img(src=link_image, style={'height': '200px', 'width': '180px', 'margin': '5px'}),
+                html.Img(src=link_image, style={'height': '180px', 'width': '170px', 'margin': '5px'}),
                 html.P(search_artist)  # Add a paragraph for the artist's name
             ], style={'display': 'inline-block', 'margin': '5px', 'text-align': 'center'})  # Style for spacing
         )

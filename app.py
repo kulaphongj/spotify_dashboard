@@ -30,7 +30,7 @@ server = app.server
 
 # Data Preprocessing Tab1
 # load data
-df_tracks = pd.read_csv('./data/preprocessed/df_tracks_remove_dup.csv')
+df_tracks = pd.read_csv('./data/preprocessed/df_tracks_interestgenre.csv')
 
 # load data
 f = open('./data/preprocessed/track_genre.json',) 
@@ -493,7 +493,7 @@ def update_content(*args):
 
 # Data Preprocessing Tab3
 # Load the data
-spotify_data_countries = pd.read_csv('./data/raw/spotify_tracks_country.csv')
+spotify_data_countries = pd.read_csv('./data/preprocessed/dashboard_finding_your_music_taste.csv')
 # spotify_data_genres = pd.read_csv('./data/raw/spotify_tracks_genre.csv')
 
 # Define a mapping of your country codes to ISO Alpha-3 codes

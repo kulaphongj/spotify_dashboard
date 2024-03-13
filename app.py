@@ -18,6 +18,11 @@ from sklearn.preprocessing import MinMaxScaler
 import os
 import pycountry
 
+import requests
+from bs4 import BeautifulSoup
+import urllib.request
+import time
+
 
 # Create Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -214,7 +219,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Your Music Taste", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 
+                                                  'fontWeight': 'bold', 'color': 'white',
                                                   'font-size': '18px'}),          
                         dbc.CardBody([
                             dash_table.DataTable(
@@ -246,7 +251,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Genre Proportion", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', #'color': 'white',
+                                                  'fontWeight': 'bold', 'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
                             html.Iframe(
@@ -265,7 +270,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Music Taste Status", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', #'color': 'white',
+                                                  'fontWeight': 'bold', 'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
                             dcc.Graph(id='radar-chart')
@@ -383,14 +388,12 @@ def update_radar_chart(slct_genre, slct_track, slct_artist):
 df = df_tracks.copy()
 df['artists'] = df['artists'].str.split(';').str[0]
 # Helper functions
-# Helper functions
 def generate_marks(feature_min, feature_max):
     step = max((feature_max - feature_min) / 5, 1) 
     if feature_max<=1:
         return {feature_min: f"{feature_min:.2f}", feature_max: f"{feature_max:.2f}"}
     else:
         return {i: f"{i:.2f}" for i in range(int(feature_min), int(feature_max) + 1, int(step))}
-
 
 def normalize(df, features):
     result = df.copy()
@@ -414,7 +417,6 @@ feature_tooltips = {
 
 # Layout adjustments
 tab2_content = dbc.Container([
-    html.Br(),
     dbc.Row([
         dbc.Col(html.H1("Discover New Music", className="text-center mb-4"), width=12),
     ]),
@@ -554,7 +556,7 @@ def update_content(*args):
 
 # Data Preprocessing Tab3
 # Load the data
-spotify_data_countries = pd.read_csv('./data/preprocessed/spotify_tracks_country_rencently.csv')
+spotify_data_countries = pd.read_csv('./data/raw/spotify_tracks_country.csv')
 # spotify_data_genres = pd.read_csv('./data/raw/spotify_tracks_genre.csv')
 
 # Define a mapping of your country codes to ISO Alpha-3 codes
@@ -602,68 +604,70 @@ spotify_data_countries_copy['snapshot_date'] = pd.to_datetime(spotify_data_count
 
 
 # Define layout of tab 3 (COUNTRIES, GLOBAL)
-tab3_content = html.Div([
-    html.Div([
-        html.Div([
+tab3_content = dbc.Container([
+    html.Br(),
+    dbc.Row([
+        dbc.Col([
             dbc.Card([
-                dcc.Graph(
-                    id='choropleth-map',
-                    style={'height': '80vh'}
-                           #'width': '790px'}, # '60vh'}, # Set height relative to the viewport height (60% of the viewport height)
-                ),
-                dcc.Slider(
+                dbc.CardHeader("Step1: Select the Range of Popularity", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dcc.RangeSlider(
                     id='color-scale-slider',
                     min=0,
                     max=100,
                     step=1,
-                    value=50,
+                    value=[0, 50],
                     marks={i: str(i) for i in range(0, 101, 5)},
-                )
-                # html.Div(id='selected-country') # Include selected-country below choropleth-map and slider
-            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '0'})
-        ], style={'width': '49%', 'float': 'left'}),
-        
-        html.Div([
+            )], color="light"),
             dbc.Card([
+                dbc.CardHeader("Step2: Select a Country to View the Top 10 Songs Below", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dcc.Graph(
+                    id='choropleth-map',
+                    style={'height': '58vh'}  # Adjusted height
+                )
+            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'})
+        ], width=6),
+        
+        dbc.Col([
+            dbc.Card([
+                dbc.CardHeader("Top 10 Most Frequently Ranked Songs by Popularity (Globally)", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
                 dcc.Graph(
                     id='top-songs-bar-chart',
                     config={'displayModeBar': False}, # Hide the mode bar
-                    style={'height': '40vh'}
-                           # 'width': '790px'} # '30vh'} # Set height relative to the viewport height (30% of the viewport height)
-                )
-            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '0', 'width': '49%', 'float': 'right'})
-        ]),
-        
-        html.Div([
-            dbc.Card([
-                dbc.CardHeader("Most Popular Artists", style={'backgroundColor': '#68A58C',
-                                              'fontWeight': 'bold', 'color': 'white',
-                                              'font-size': '18px'}
+                    style={'height': '35vh'}  # Adjusted height
                 ),
-                dbc.CardBody([
-                    html.Div(id='image-container')
-                ])
-            ], color='light')
-        ]),
-        
-        
-        html.Div([
+            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px'}
+            ),
+            dbc.Card([
+                dbc.CardHeader("Top 3 Most Frequently Ranked Artist by Popularity (Globally)", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
+                html.Div(id='image-container', style={'height': '27vh', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center'})
+                
+            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'}
+            )
+        ], width=6),
+    ]),
+    
+    dbc.Row([
+        dbc.Col([
             dbc.Card([
                 html.Div(id='selected-country'),
                 html.Div(id='song-list')
-            ], style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'marginTop': '3px'})
-        ], style={'width': '100%', 'float': 'left'}),
+            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'})
+        ], width=12),
     ]),
-])
+], fluid=True)
 
-# Define callback to update choropleth map based on slider value
+# Define callback to update choropleth map based on slider value range
 @app.callback(
     Output('choropleth-map', 'figure'),
     [Input('color-scale-slider', 'value')]
 )
-def update_choropleth_map(selected_value):
-    # Filter DataFrame based on selected popularity value
-    filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
+def update_choropleth_map(selected_range):
+    # Extracting min and max values from the selected range
+    min_value, max_value = selected_range
+
+    # Filter DataFrame based on selected range of popularity values
+    filtered_data = spotify_data_countries_copy[(spotify_data_countries_copy['popularity'] >= min_value) & 
+                                                (spotify_data_countries_copy['popularity'] <= max_value)]
 
     # Sort filtered data by 'popularity'
     filtered_data = filtered_data.sort_values(by='popularity', ascending=False)
@@ -710,9 +714,13 @@ def update_choropleth_map(selected_value):
     Output('top-songs-bar-chart', 'figure'),
     [Input('color-scale-slider', 'value')]
 )
-def update_top_songs_bar_chart(selected_value):
-    # Filter DataFrame based on selected popularity value
-    filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
+def update_top_songs_bar_chart(selected_range):
+    # Extracting min and max values from the selected range
+    min_value, max_value = selected_range
+
+    # Filter DataFrame based on selected range of popularity values
+    filtered_data = spotify_data_countries_copy[(spotify_data_countries_copy['popularity'] >= min_value) & 
+                                                (spotify_data_countries_copy['popularity'] <= max_value)]
 
     # Count the occurrences of each song name
     top_song_counts = filtered_data['name'].value_counts().head(10)
@@ -731,7 +739,7 @@ def update_top_songs_bar_chart(selected_value):
         hovertext=hover_text,
         hoverinfo='text',
     )])
-    fig.update_layout(title='Top 10 Most Frequently Ranked Songs by Popularity (Globally)', 
+    fig.update_layout(#title='Top 10 Most Frequently Ranked Songs by Popularity (Globally)', 
                       yaxis={'categoryorder': 'total ascending'},
                       xaxis={'side': 'top'}, # Move x-axis markings to the top
                       font=dict(size=10))
@@ -743,9 +751,14 @@ def update_top_songs_bar_chart(selected_value):
     Output('image-container', 'children'),
     [Input('color-scale-slider', 'value')]
 )
-def update_top_artists_bar_chart(selected_value):
-    # Filter DataFrame based on selected popularity value
-    filtered_data = spotify_data_countries_copy[spotify_data_countries_copy['popularity'] <= selected_value]
+def update_top_artists_img(selected_range):
+    # Extracting min and max values from the selected range
+    min_value, max_value = selected_range
+
+    # Filter DataFrame based on selected range of popularity values
+    filtered_data = spotify_data_countries_copy[(spotify_data_countries_copy['popularity'] >= min_value) & 
+                                                (spotify_data_countries_copy['popularity'] <= max_value)]
+    
 
     # Count the occurrences of each artist
     list_top_artists = filtered_data['artists'].value_counts().head(3).index.tolist()
@@ -768,7 +781,7 @@ def update_top_artists_bar_chart(selected_value):
         response = requests.get(url_search, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        time.sleep(1)  # wait 1 second for data showing up; I have tried 0.75. It cannot load the image.
+        time.sleep(1.5)  # wait 1 second for data showing up; I have tried 0.75. It cannot load the image.
 
         # get image link
         link_image = soup.find_all('img', {"class":"mimg"})[0].get('src')
@@ -803,7 +816,7 @@ def update_selected_country_display(clickData):
     [Input('choropleth-map', 'clickData'),
      Input('color-scale-slider', 'value')]
 )
-def update_song_list(clickData, selected_value):
+def update_song_list(clickData, selected_range):
     # if not clickData:
     #     return "Click on a country to see its top 10 songs by popularity."
 
@@ -812,8 +825,10 @@ def update_song_list(clickData, selected_value):
         country_clicked = clickData['points'][0]['location']
         top_songs_in_country = spotify_data_countries_copy[spotify_data_countries_copy['country'] == country_clicked]
 
-        # Filter songs based on popularity less than or equal to the selected value
-        top_songs_filtered = top_songs_in_country[top_songs_in_country['popularity'] <= selected_value]
+        # Filter songs based on popularity less than or equal to the selected value range
+        min_value, max_value = selected_range
+        top_songs_filtered = top_songs_in_country[(top_songs_in_country['popularity'] >= min_value) & 
+                                                    (top_songs_in_country['popularity'] <= max_value)]
 
         # Drop duplicates based on name and artists to keep only one entry for each song
         top_songs_unique = top_songs_filtered.drop_duplicates(subset=['name', 'artists'])
@@ -822,8 +837,10 @@ def update_song_list(clickData, selected_value):
         top_songs_top10 = top_songs_unique.nlargest(10, 'popularity')
 
         # Additional columns to include with each first letter capitalized in the header
-        columns = ['popularity', 'danceability', 'energy', 'loudness', 'speechiness',
-                'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']
+        columns = ['popularity', 
+#                    'danceability', 'energy', 'loudness', 'speechiness',
+#                 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'
+                  ]
 
         # Create DataTable component for displaying top 10 songs with additional columns
         data_table = dash_table.DataTable(
@@ -853,9 +870,5 @@ app.layout = dbc.Container([
     ])
 ])
 
-
-
 if __name__ == '__main__':
-    app.run_server(debug=True)
-
-
+    app.run_server(debug=False)

@@ -770,7 +770,7 @@ def update_top_artists_img(selected_range):
     for i, search_artist in enumerate(list_top_artists):
         # define website (Bing is easy for scraping)
         # url_search = f'https://www.bing.com/images/search?q={search_query}'
-        url_search = f'https://www.bing.com/images/search?cw=1853&ch=933&q={search_artist}&qft=%2bfilterui%3aface-portrait&first=1'
+        url_search = f'https://www.bing.com/images/search?cw=1853&ch=933&q=spotify+{search_artist}&qft=%2bfilterui%3aface-portrait&first=1'
         url_search
 
         # call html

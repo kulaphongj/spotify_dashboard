@@ -761,7 +761,8 @@ def update_top_artists_img(selected_range):
     
 
     # Count the occurrences of each artist
-    list_top_artists = filtered_data['artists'].value_counts().head(3).index.tolist()
+    filtered_data_notdup = filtered_data[['artists', 'country']].drop_duplicates()
+    list_top_artists = filtered_data_notdup['artists'].value_counts().head(3).index.tolist()
     
 #     list_top_artists = ['Taylor Swift',  'Justin Bieber', 'Ed Sheeran']  # top 3
 

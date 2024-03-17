@@ -14,6 +14,7 @@ import numpy as np
 import json
 
 import plotly.graph_objects as go
+import plotly.express as px
 from sklearn.preprocessing import MinMaxScaler
 import os
 import pycountry
@@ -59,8 +60,8 @@ f.close()
 
 # # comment for production 
 # # uncomment for making the faster dashboard
-# list_artists = list_artists[:20]
-# list_track_name = list_track_name[:5]
+list_artists = list_artists[:20]
+list_track_name = list_track_name[:5]
 
 def filter_taste(slct_genre, slct_track, slct_artist):
     df_filt = df_tracks.copy()
@@ -254,10 +255,15 @@ tab1_content = html.Div([
                                                   'fontWeight': 'bold', 'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
-                            html.Iframe(
-                                        id='pie-chart',
-                                        style={'border-width': '0', 'width': '100%', 'height': '330px'}
-                            )
+#                             html.Iframe(
+#                                         id='pie-chart',
+#                                         style={'border-width': '0', 'width': '100%', 'height': '330px'}
+#                             )
+                            dcc.Graph(
+                                id='pie-chart',
+#                                 config={'displayModeBar': False}, # Hide the mode bar
+                                style={'height': '100%', 'border-width': '0'}
+                            ),
                         ], style={'height': '330px'})
                     ], color="light")
                 ], width=6)
@@ -284,7 +290,8 @@ tab1_content = html.Div([
 
 @app.callback(
     Output('stats-table', 'data'),  # Statistics table
-    Output('pie-chart', 'srcDoc'),  # Genre Pie Chart
+#     Output('pie-chart', 'srcDoc'),  # Genre Pie Chart
+    Output('pie-chart', 'figure'),  # Genre Pie Chart
     Input('genre-filter', 'value'),
     Input('trackname-filter', 'value'),
     Input('artist-filter', 'value'))
@@ -311,23 +318,38 @@ def filter_genre(slct_genre, slct_track, slct_artist):
         df_pie = df_pie.groupby(["Genre"]).sum().reset_index()
 #     df_pie = df_pie.round(2)
        
-    chart_pie = alt.Chart(df_pie).mark_arc(innerRadius=0).encode(
-                        theta=alt.Theta(field="Percentage", type="quantitative"),
-                        color=alt.Color(field="Genre", type="nominal"),
-                        tooltip=[alt.Tooltip("Genre:N"), 
-                                 alt.Tooltip("Percentage:Q", format='.2%'), 
-                                 alt.Tooltip("Count:Q", format=',')]
-                )
+#     chart_pie = alt.Chart(df_pie).mark_arc(innerRadius=0).encode(
+#                         theta=alt.Theta(field="Percentage", type="quantitative"),
+#                         color=alt.Color(field="Genre", type="nominal"),
+#                         tooltip=[alt.Tooltip("Genre:N"), 
+#                                  alt.Tooltip("Percentage:Q", format='.2%'), 
+#                                  alt.Tooltip("Count:Q", format=',')]
+#                 )
 
-    text = chart_pie.mark_text(radius=135, size=12, align="center").encode(
-                text=alt.Text("Percentage:Q",format=".1%",),
-            )
+#     text = chart_pie.mark_text(radius=135, size=12, align="center").encode(
+#                 text=alt.Text("Percentage:Q",format=".1%",),
+#             )
     
     
-    chart_pie_t = (chart_pie + text).properties(width=230, height=270, 
-                                                background='transparent').configure_view(strokeWidth=0)
+#     chart_pie_t = (chart_pie + text).properties(width=230, height=270, 
+#                                                 background='transparent').configure_view(strokeWidth=0)
     
-    return df_table.to_dict('records'), chart_pie_t.to_html()
+#     return df_table.to_dict('records'), chart_pie_t.to_html()
+
+    
+#     Create a pie chart
+    fig = go.Figure(data=[go.Pie(
+        labels=df_pie['Genre'],
+        values=df_pie['Percentage'],
+    )])
+    fig.update_traces(textposition='inside', hoverinfo="label+percent")
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', 
+                      margin=dict(t=0, b=0, l=0, r=0),
+                      paper_bgcolor='rgba(0,0,0,0)')
+        
+    return df_table.to_dict('records'), fig
+
+
 
 
 # Radar chart with plotly
@@ -609,7 +631,7 @@ tab3_content = dbc.Container([
     dbc.Row([
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader("Step1: Select the Range of Popularity", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dbc.CardHeader("Step1: Select the Range of Popularity (mainstream or undiscovered)", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
                 dcc.RangeSlider(
                     id='color-scale-slider',
                     min=0,
@@ -619,29 +641,28 @@ tab3_content = dbc.Container([
                     marks={i: str(i) for i in range(0, 101, 5)},
             )], color="light"),
             dbc.Card([
-                dbc.CardHeader("Step2: Select a Country to View the Top 10 Songs Below", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
+                dbc.CardHeader("Step2: Zoom in & Select a Country to View the Top 10 Songs", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),  # Light green background, bold, and centered text
                 dcc.Graph(
                     id='choropleth-map',
-                    style={'height': '58vh'}  # Adjusted height
+                    style={'height': '100%', 'padding': '3px'} # Adjusted height 58vh was good
                 )
-            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'})
+            ], color="light", style={'margin-top': '16px'}) # style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'}
         ], width=6),
         
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader("Top 10 Most Frequently Ranked Songs by Popularity (Globally)", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
+                dbc.CardHeader("Most Frequently Ranked Artists in the World by Popularity", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
                 dcc.Graph(
-                    id='top-songs-bar-chart',
+                    id='top-artists-pie-chart',
                     config={'displayModeBar': False}, # Hide the mode bar
-                    style={'height': '35vh'}  # Adjusted height
+                    style={'height': '100%', 'padding': '3px'} # Adjusted height 35vh was good, but chart wouldn't fit
                 ),
-            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px'}
+            ], color="light" # , style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px'}
             ),
             dbc.Card([
-                dbc.CardHeader("Top 3 Most Frequently Ranked Artists by Popularity (Globally)", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
-                html.Div(id='image-container', style={'height': '27vh', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center'})
-                
-            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'}
+                dbc.CardHeader("Top 3 Artists in the World based on Popularity Range", style={'backgroundColor': '#68A58C', 'fontWeight': 'bold', 'textAlign': 'center'}),
+                html.Div(id='image-container', style={'height': '33vh', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center'}) # height was 27vh
+            ], color="light", style={'margin-top': '16px'} # 'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 
             )
         ], width=6),
     ]),
@@ -651,7 +672,7 @@ tab3_content = dbc.Container([
             dbc.Card([
                 html.Div(id='selected-country'),
                 html.Div(id='song-list')
-            ], color="light", style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'})
+            ], color="light", style={'margin-top': '16px'}) # 'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 
         ], width=12),
     ]),
 ], fluid=True)
@@ -696,7 +717,7 @@ def update_choropleth_map(selected_range):
 
     # Customize the layout of the choropleth map
     fig.update_layout(
-        title='Top Songs by Country (Based on Popularity)',
+        # title='Top Songs by Country (Based on Popularity)',
         geo=dict(
             showcoastlines=True,
             coastlinecolor="DarkBlue",
@@ -709,40 +730,64 @@ def update_choropleth_map(selected_range):
 
     return fig
 
-# Add callback to update bar chart of the count of the top 10 most frequent song names globally
+# # Add callback to update bar chart of the count of the top 10 most frequent song names globally
+# @app.callback(
+#     Output('top-songs-bar-chart', 'figure'),
+#     [Input('color-scale-slider', 'value')]
+# )
+# def update_top_songs_bar_chart(selected_range):
+#     # Extracting min and max values from the selected range
+#     min_value, max_value = selected_range
+
+#     # Filter DataFrame based on selected range of popularity values
+#     filtered_data = spotify_data_countries_copy[(spotify_data_countries_copy['popularity'] >= min_value) & 
+#                                                 (spotify_data_countries_copy['popularity'] <= max_value)]
+
+#     # Count the occurrences of each song name
+#     top_song_counts = filtered_data['name'].value_counts().head(10)
+    
+#     # Get the corresponding artists for the top songs
+#     top_song_artists = filtered_data.groupby('name')['artists'].first()
+    
+#     # Create hover text with name and artists
+#     hover_text = [f"{song}<br>by {top_song_artists[song]}" for song in top_song_counts.index]
+    
+#     # Create a horizontal bar chart
+#     fig = go.Figure(data=[go.Bar(
+#         y=top_song_counts.index + ' by ' + top_song_artists[top_song_counts.index], # Concatenate song name and artist
+#         x=top_song_counts.values,
+#         orientation='h', # Set orientation to horizontal
+#         hovertext=hover_text,
+#         hoverinfo='text',
+#     )])
+#     fig.update_layout(#title='Top 10 Most Frequently Ranked Songs by Popularity (Globally)', 
+#                       yaxis={'categoryorder': 'total ascending'},
+#                       xaxis={'side': 'top'}, # Move x-axis markings to the top
+#                       font=dict(size=10))
+        
+#     return fig
+
+# Add callback to update top artists pie chart based on slider value
 @app.callback(
-    Output('top-songs-bar-chart', 'figure'),
+    Output('top-artists-pie-chart', 'figure'),
     [Input('color-scale-slider', 'value')]
 )
-def update_top_songs_bar_chart(selected_range):
+def update_top_artists_pie_chart(selected_range):
     # Extracting min and max values from the selected range
     min_value, max_value = selected_range
 
     # Filter DataFrame based on selected range of popularity values
     filtered_data = spotify_data_countries_copy[(spotify_data_countries_copy['popularity'] >= min_value) & 
                                                 (spotify_data_countries_copy['popularity'] <= max_value)]
-
-    # Count the occurrences of each song name
-    top_song_counts = filtered_data['name'].value_counts().head(10)
     
-    # Get the corresponding artists for the top songs
-    top_song_artists = filtered_data.groupby('name')['artists'].first()
+    # Count the occurrences of each artist
+    top_artist_counts = filtered_data['artists'].value_counts().head(10)
     
-    # Create hover text with name and artists
-    hover_text = [f"{song}<br>by {top_song_artists[song]}" for song in top_song_counts.index]
-    
-    # Create a horizontal bar chart
-    fig = go.Figure(data=[go.Bar(
-        y=top_song_counts.index + ' by ' + top_song_artists[top_song_counts.index], # Concatenate song name and artist
-        x=top_song_counts.values,
-        orientation='h', # Set orientation to horizontal
-        hovertext=hover_text,
-        hoverinfo='text',
+    # Create a pie chart
+    fig = go.Figure(data=[go.Pie(
+        labels=top_artist_counts.index,
+        values=top_artist_counts.values,
     )])
-    fig.update_layout(#title='Top 10 Most Frequently Ranked Songs by Popularity (Globally)', 
-                      yaxis={'categoryorder': 'total ascending'},
-                      xaxis={'side': 'top'}, # Move x-axis markings to the top
-                      font=dict(size=10))
         
     return fig
 
@@ -865,7 +910,7 @@ app.layout = dbc.Container([
         dcc.Tab([tab2_content], label='Find New One?', value='tab-2',
                 style={'fontSize': 20, 'color': 'black'},
                 selected_style={'fontSize': 20, 'fontWeight': 'bold', 'color': 'white', 'backgroundColor': 'green'}),
-        dcc.Tab([tab3_content], label='Explore Globally', value='tab-3',
+        dcc.Tab([tab3_content], label='Explore the World', value='tab-3',
                 style={'fontSize': 20, 'color': 'black'},
                 selected_style={'fontSize': 20, 'fontWeight': 'bold', 'color': 'white', 'backgroundColor': 'green'}),
     ])

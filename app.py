@@ -340,9 +340,9 @@ def filter_genre(slct_genre, slct_track, slct_artist):
 #     Create a pie chart
     fig = go.Figure(data=[go.Pie(
         labels=df_pie['Genre'],
-        values=df_pie['Percentage'],
+        values=df_pie['Count'],
     )])
-    fig.update_traces(textposition='inside', hoverinfo="label+percent")
+    fig.update_traces(textposition='inside', hoverinfo="label+value")
     fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', 
                       margin=dict(t=0, b=0, l=0, r=0),
                       paper_bgcolor='rgba(0,0,0,0)')

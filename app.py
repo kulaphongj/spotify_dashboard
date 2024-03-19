@@ -59,8 +59,8 @@ f.close()
 
 # # comment for production 
 # # uncomment for making the faster dashboard
-list_artists = list_artists[:20]
-list_track_name = list_track_name[:5]
+# list_artists = list_artists[:20]
+# list_track_name = list_track_name[:5]
 
 def filter_taste(slct_genre, slct_track, slct_artist):
     df_filt = df_tracks.copy()

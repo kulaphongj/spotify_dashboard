@@ -130,7 +130,7 @@ tab1_content = html.Div([
                         dbc.Card([
                             dbc.CardHeader("Filter", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', #'color': 'white',
                                                   'font-size': '18px'}),
                             dbc.CardBody([
                                 # Row 1: Filter
@@ -219,7 +219,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Your Music Taste", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', #'color': 'white',
                                                   'font-size': '18px'}),          
                         dbc.CardBody([
                             dash_table.DataTable(
@@ -251,7 +251,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Genre Proportion", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', #'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
 #                             html.Iframe(
@@ -275,7 +275,7 @@ tab1_content = html.Div([
                     dbc.Card([
                         dbc.CardHeader("Music Taste Status", 
                                            style={'backgroundColor': '#68A58C',
-                                                  'fontWeight': 'bold', 'color': 'white',
+                                                  'fontWeight': 'bold', #'color': 'white',
                                                   'font-size': '18px'}),
                         dbc.CardBody([
                             dcc.Graph(id='radar-chart')

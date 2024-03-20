@@ -624,6 +624,15 @@ spotify_data_countries_copy = spotify_data_countries_copy.dropna(subset=['countr
 spotify_data_countries_copy['snapshot_date'] = pd.to_datetime(spotify_data_countries_copy['snapshot_date'])
 
 
+# Define the dropdown menu
+country_dropdown = dcc.Dropdown(
+    id='country-dropdown',
+    options=[{'label': map_country_code_to_name(code), 'value': code} for code in spotify_data_countries_copy['country'].unique()],
+    value=None,  # Default value
+    placeholder="Select a country",
+)
+
+
 # Define layout of tab 3 (COUNTRIES, GLOBAL)
 tab3_content = dbc.Container([
     html.Br(),
@@ -644,7 +653,9 @@ tab3_content = dbc.Container([
                 dcc.Graph(
                     id='choropleth-map',
                     style={'height': '100%', 'padding': '3px'} # Adjusted height 58vh was good
-                )
+                ),
+                # Add the dropdown menu beneath the map
+                html.Div(country_dropdown, style={'margin-top': '16px', 'margin-bottom': '16px'})
             ], color="light", style={'margin-top': '16px'}) # style={'backgroundColor': 'light', 'borderRadius': '10px', 'border': '1px solid lightgrey', 'padding': '3px', 'margin-top': '16px'}
         ], width=6),
         
@@ -844,60 +855,86 @@ def update_top_artists_img(selected_range):
     return image_components
 
 
-# Define callback to update selected country display
+# Keep track of the last triggered input
+last_triggered = None
+
+# Define callback to update selected country display based on dropdown selection or choropleth map click
 @app.callback(
     Output('selected-country', 'children'),
-    [Input('choropleth-map', 'clickData')]
+    [Input('choropleth-map', 'clickData'),
+     Input('country-dropdown', 'value')]
 )
-def update_selected_country_display(clickData):
-    # if clickData:
-    country_code = clickData['points'][0]['location']
-    country_name = map_country_code_to_name(country_code) # Map country code to full country name
-    return html.H3(f"Selected Country: {country_name}")
+def update_selected_country_display(clickData, selected_dropdown_country):
+    global last_triggered
+    
+    if dash.callback_context.triggered:
+        last_triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+    
+    print("Last Triggered:", last_triggered)
+    
+    if selected_dropdown_country:
+        country_name = map_country_code_to_name(selected_dropdown_country)  # Map country code to full country name
+        return html.H3(f"Selected Country: {country_name}")
+    elif clickData:
+        country_code = clickData['points'][0]['location']
+        country_name = map_country_code_to_name(country_code)  # Map country code to full country name
+        return html.H3(f"Selected Country: {country_name}")
+    else:
+        if last_triggered == 'country-dropdown':  # Reset last_triggered only if dropdown was last triggered
+            last_triggered = None
+        return "Select a country from the dropdown or click on the map to see its top 10 songs by popularity."
 
-    # return html.H3("Step3: Top 10 Songs List for Each Country Displayed Here")
-
-# Add callback to update song list when a country is clicked or slider value changes
+# Add callback to update song list when a country is clicked, dropdown changes, or slider value changes
 @app.callback(
     Output('song-list', 'children'),
     [Input('choropleth-map', 'clickData'),
-     Input('color-scale-slider', 'value')]
+     Input('color-scale-slider', 'value'),
+     Input('country-dropdown', 'value')]
 )
-def update_song_list(clickData, selected_range):
-    # if not clickData:
-    #     return "Click on a country to see its top 10 songs by popularity."
-
-    if clickData:
-
+def update_song_list(clickData, selected_range, selected_dropdown_country):
+    global last_triggered
+    
+    print("Last Triggered:", last_triggered)
+    
+    if last_triggered == 'country-dropdown' and selected_dropdown_country:
+        country_clicked = selected_dropdown_country
+    elif last_triggered == 'choropleth-map' and clickData:
         country_clicked = clickData['points'][0]['location']
-        top_songs_in_country = spotify_data_countries_copy[spotify_data_countries_copy['country'] == country_clicked]
+    else:
+        return "Select a country from the dropdown or click on the map to see its top 10 songs by popularity."
 
-        # Filter songs based on popularity less than or equal to the selected value range
-        min_value, max_value = selected_range
-        top_songs_filtered = top_songs_in_country[(top_songs_in_country['popularity'] >= min_value) & 
-                                                    (top_songs_in_country['popularity'] <= max_value)]
+    top_songs_in_country = spotify_data_countries_copy[spotify_data_countries_copy['country'] == country_clicked]
 
-        # Drop duplicates based on name and artists to keep only one entry for each song
-        top_songs_unique = top_songs_filtered.drop_duplicates(subset=['name', 'artists'])
+    # Filter songs based on popularity within the selected value range
+    min_value, max_value = selected_range
+    top_songs_filtered = top_songs_in_country[(top_songs_in_country['popularity'] >= min_value) & 
+                                              (top_songs_in_country['popularity'] <= max_value)]
 
-        # Select the top 10 songs by popularity after removing duplicates
-        top_songs_top10 = top_songs_unique.nlargest(10, 'popularity')
+    # Drop duplicates based on name and artists to keep only one entry for each song
+    top_songs_unique = top_songs_filtered.drop_duplicates(subset=['name', 'artists'])
 
-        # Additional columns to include with each first letter capitalized in the header
-        columns = ['popularity', 
-#                    'danceability', 'energy', 'loudness', 'speechiness',
-#                 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'
-                  ]
+    # Select the top 10 songs by popularity after removing duplicates
+    top_songs_top10 = top_songs_unique.nlargest(10, 'popularity')
 
-        # Create DataTable component for displaying top 10 songs with additional columns
-        data_table = dash_table.DataTable(
-            id='table',
-            columns=[{'name': col.capitalize(), 'id': col} for col in ['name', 'artists'] + columns],
-            data=top_songs_top10.to_dict('records'),
-            style_cell={'textAlign': 'left'}
-        )
+    # Additional columns to include with each first letter capitalized in the header
+    columns = ['popularity']
 
-        return data_table
+    # Create DataTable component for displaying top 10 songs with additional columns
+    data_table = dash_table.DataTable(
+        id='table',
+        columns=[{'name': col.capitalize(), 'id': col} for col in ['name', 'artists'] + columns],
+        data=top_songs_top10.to_dict('records'),
+        style_cell={'textAlign': 'left'}
+    )
+
+    return data_table
+
+
+
+
+
+
+
 
 
 

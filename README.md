@@ -2,12 +2,14 @@
     <a href="https://open.spotify.com/">
         <img src="img/spotify_logo_black.png" alt="YelpViz" align="left" width="100"/>  
     </a>
-    <h1>Discover Your Music Taste Dashboard</h1>
+    <h1>Music Explorer with Spotify</h1>
 </div>
 
 ## Overview
 
-Discover Your Music Taste Dashboard uses Spotify data to provide an interactive and insightful exploration of your music preferences. Designed to help users uncover new tracks and understand their listening habits, the dashboard features advanced data visualizations and customizable filters.
+Music Explorer with Spotify uses Spotify data to provide an interactive and insightful exploration of your music preferences. Designed to help users uncover new tracks and understand their listening habits, the dashboard features advanced data visualizations and customizable filters.  
+
+[Go to Music Explorer with Spotify Dashboard](https://spotify-dashboard-xnjm.onrender.com/)  
 
 ## Getting Started
 
@@ -30,15 +32,16 @@ This tab is dedicated to finding new music based on your listening preferences a
 
 - **Feature Sliders**: Customize your search with sliders for various musical attributes.
 - **Genre Dropdown**: Filter songs by genre to discover music that aligns with your tastes.
-- **Music Visualizations**: Utilize bar charts and parallel coordinates plots to understand the musical features of your favorite tracks.
+- **Music Visualizations**: Use parallel coordinates plots to understand the musical features of your favorite tracks.
+- **Ranked Song Suggestion**: Get ranked song suggestions and Spotify link based on the genre and music features selected.
 
-### Tab 3: Explore Globally
+### Tab 3: Explore the World
 
 Gain global insights into Spotify's music trends.
 
-- **Choropleth Map**: Explore the popularity of top songs across different countries.
-- **Top Songs and Artists Charts**: Discover the most popular songs and artists globally or in specific regions.
-- **Detailed Song Insights**: Click on a country to see detailed information about its top songs, including popularity and musical features.
+- **Choropleth Map**: Explore the popularity of top songs across different countries to discover new music in uncharted areas.
+- **Top Songs and Artists Charts**: Discover the most popular songs and artists in the world or select a specific country.
+- **Detailed Song Insights**: Adjust the range of popularity (mainstream or undiscovered), zoom in and click on a country to see the top 10 songs in that region.
 
 ## Contributing
 
@@ -55,5 +58,5 @@ Tab 1: Discovery Music Taste Sketch
 Tab 2: Find New Music  
 ![Find New Music](img/re1_tab2.png)  
 
-Tab 3: Explore Globally  
+Tab 3: Explore the World  
 ![Explore Globally](img/re1_tab3.png)  
